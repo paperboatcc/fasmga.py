@@ -1,4 +1,5 @@
 # fasmga.py
+[![Documentation Status](https://readthedocs.org/projects/fasmgapy/badge/?version=latest)](https://fasmgapy.readthedocs.io/en/latest/?badge=latest)
 
 fasmga.py is a [Fasm.ga](https://fasmga.org) API wrapper written using asyncio.
 [Fasm.ga](https://fasmga.org) is a free and open-source URL shortener.
