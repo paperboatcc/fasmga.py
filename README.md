@@ -1,6 +1,7 @@
 # fasmga.py
 
 fasmga.py is a [Fasm.ga](https://fasmga.org) API wrapper written using asyncio.
+[Fasm.ga](https://fasmga.org) is a free and open-source URL shortener.
 
 ## Installation
 fasmga.py works with Python 3.7 and greater. \
