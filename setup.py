@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="fasmga.py",
-    version="1.0.0",
+    version="1.1.0",
     author="Vincy.zsh",
     author_email="Vincysuper07@gmail.com",
     description="A Fasm.ga API wrapper written using asyncio.",
