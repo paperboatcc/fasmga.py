@@ -1,7 +1,7 @@
 import asyncio
 import typing
 from aiohttp import ClientResponse, ClientSession, ClientResponseError
-from .utils import DictWithoutNones, TotallyARunningLoop
+from .utils import DictWithoutNones, TotallyARunningLoop, get
 from .errors import *
 from .url import URL
 
@@ -15,16 +15,20 @@ class Client:
         loop: asyncio.AbstractEventLoop = None,
         session: ClientSession = None,
         discord=False,
+        disable_default_events=False
     ):
         self._session = session
-        self.token = token
+        self.disable_default_events = disable_default_events
+        self.token = str(token)
         self.loop = loop or asyncio.get_event_loop()
         self.has_created_loop = loop == None
         self.has_created_session = session == None
         self.discord = discord
         self.running_url_loop = TotallyARunningLoop()
+        self._pending_deletion_urls: typing.List[URL] = []
         self.urls: typing.List[URL] = []
         self._ready = asyncio.Event()
+        self.events: typing.Dict[list] = {}
 
     @property
     def session(self) -> ClientSession:
@@ -33,9 +37,6 @@ class Client:
 
         return self._session
 
-    async def on_ready(self):
-        return
-
     async def handle_status_codes(self, request: ClientResponse, datas: dict = {}):
         cls = HTTPException
         if request.status == 429:
@@ -43,10 +44,19 @@ class Client:
         elif request.status == 400:
             cls = BadRequest
 
-        return await self.on_http_exception(cls(request.status, datas))
+        ret = cls(request, datas)
+        events = self.events.get("on_http_exception", [])
+        if not self.disable_default_events:
+            await self.on_http_exception(ret)
+
+        for event in events:
+            asyncio.ensure_future(event(ret))
 
     async def on_http_exception(self, error: HTTPException):
         raise error
+
+    async def on_ready(self):
+        return
 
     async def test_connection(self):
         tosend = {"Authorization": self.token}
@@ -106,17 +116,36 @@ class Client:
         return ret
 
     def get_url(self, id):
-        for url in self.urls:
-            if url.id == id:
-                return url
+        return get(self.urls, id=id)
 
     async def url_loop(self):
         while True:
             urls = await self.fetch_all_urls()
             for url in urls:
-                if not self.get_url(url.id):
+                if not self.get_url(url.id) and not get(self._pending_deletion_urls, id=url.id):
                     self.urls.append(url)
+                    events = self.events.get("on_url_create", [])
+                    for event in events:
+                        asyncio.ensure_future(event(url))
+                elif self.get_url(url.id):
+                    ourl, oourl = self.get_url(url.id), self.get_url(url.id)
+                    ourl.uri = url.uri
+                    ourl.nsfw = url.nsfw
+                    ourl.clicks = url.clicks
 
+                    events = self.events.get("on_url_edit", [])
+                    for event in events:
+                        asyncio.ensure_future(event(ourl, oourl))
+
+                await asyncio.sleep(0)
+            
+            for url in self.urls:
+                if not get(urls, id=url.id):
+                    self.urls.remove(url)
+                    events = self.events.get("on_url_delete", [])
+                    for event in events:
+                        asyncio.ensure_future(event(url))
+                
                 await asyncio.sleep(0)
 
             self._ready.set()
@@ -138,7 +167,14 @@ class Client:
         await self.test_connection()
         self.start_url_loop()
         await self.wait_until_ready()
-        await self.on_ready()
+
+        events = self.events.get("on_ready", [])
+
+        if not self.disable_default_events:
+            await self.on_ready()
+
+        for event in events:
+            asyncio.ensure_future(event())
 
     def start(self):
         try:
@@ -156,11 +192,14 @@ class Client:
             self.loop.stop()
 
     def on(self, event):
-        if event.startswith("on_"):
-            event = event.replace("on_", "", 1)
+        if not event.startswith("on_"):
+            event = "on_" + event
 
         def decorate(func):
-            setattr(self, f"on_{event}", func)
+            if not event in self.events:
+                self.events[event] = []
+
+            self.events[event].append(func)
             return func
 
         return decorate
@@ -175,3 +214,6 @@ class Client:
                 password=password,
             ),
         )
+
+    async def delete(self, id):
+        await self.request("/delete", id=id)

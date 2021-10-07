@@ -1,6 +1,10 @@
+
+
 class URL:
     def __init__(self, client, **kwargs):
-        self.client = client
+        from .client import Client
+
+        self.client: Client = client
         self.id = kwargs["ID"].strip("/")
         self.uri = kwargs["redirect_url"]
         self.nsfw = kwargs["nsfw"]
@@ -16,3 +20,9 @@ class URL:
         await self.client.edit(self.id, url=url, password=password, nsfw=nsfw)
         self.uri = url
         self.nsfw = nsfw
+    
+    async def delete(self):
+        self.client._pending_deletion_urls.append(self)
+        await self.client.delete(self.id)
+        self.client.urls.remove(self)
+        self.client._pending_deletion_urls.remove(self)
