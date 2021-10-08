@@ -1,15 +1,5 @@
-.. fasmga.py documentation master file, created by
-   sphinx-quickstart on Fri Oct  8 08:34:11 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to fasmga.py's documentation!
-=====================================
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
+Welcome
+========
 
 Welcome to the fasmga.py documentation!
 
@@ -17,7 +7,7 @@ fasmga.py is a Fasm.ga API wrapper written in Python using asyncio.
 
 `Fasm.ga`_ is a free and open-source URL shortener.
 
-nstallation
+Installation
 -------------
 
 To install fasmga.py, you need pip first.
@@ -55,10 +45,3 @@ You may ask one in Fasm.ga's `Discord server`_.
 
 .. _Fasm.ga: https://fasmga.org
 .. _Discord server: https://discord.gg/MgQhdSZSsp
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
