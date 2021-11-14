@@ -7,7 +7,7 @@ from .url import URL
 
 
 class Client:
-    FASMGA_API_URL = "http://fasmvps.ga:2002"
+    FASMGA_API_URL = "https://api.fasmga.org"
 
     def __init__(
         self,
