@@ -5,7 +5,6 @@ from .utils import DictWithoutNones, TotallyARunningLoop, get
 from .errors import *
 from .url import URL
 
-
 class Client:
     FASMGA_API_URL = "http://fasmvps.ga:2002"
 
@@ -14,8 +13,8 @@ class Client:
         token,
         loop: asyncio.AbstractEventLoop = None,
         session: ClientSession = None,
-        discord=False,
-        disable_default_events=False
+        discord = False,
+        disable_default_events = False
     ):
         self._session = session
         self.disable_default_events = disable_default_events
@@ -32,12 +31,14 @@ class Client:
 
     @property
     def session(self) -> ClientSession:
-        if self._session == None:
-            self._session = ClientSession(loop=self.loop)
-
+        if not self._session:
+            self._session = ClientSession(loop = self.loop)
         return self._session
 
-    async def handle_status_codes(self, request: ClientResponse, datas: dict = {}):
+    async def handle_status_codes(self,
+        request: ClientResponse,
+        datas: dict = {}
+    *args, **kwargs):
         cls = HTTPException
         if request.status == 429:
             cls = TooManyRequests
